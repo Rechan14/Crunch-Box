@@ -199,24 +199,11 @@ async function create(params) {
 }
 
 async function update(id, params) {
-    const account = await getAccount(id);
+    const user = await db.Account.findByPk(id);
+    if (!user) throw 'User not found';
 
-    // validate (if email was changed)
-    if (params.email && account.email !== params.email && await db.Account.findOne({ where: { email: params.email } })) {
-        throw 'Email "' + params.email + '" is already taken';
-    }
-
-    // hash password if it was entered
-    if (params.password) {
-        params.passwordHash = await hash(params.password);
-    }
-
-    // copy params to account and save
-    Object.assign(account, params);
-    account.updated = Date.now();
-    await account.save();
-
-    return basicDetails(account);
+    Object.assign(user, params);
+    await user.save();  // Ensure the update is saved
 }
 
 async function _delete(id) {
@@ -262,8 +249,8 @@ function randomTokenString() {
 }
 
 function basicDetails(account) {
-    const { id, title, firstName, lastName, email, country, city, postalCode, role, created, updated, isVerified } = account;
-    return { id, title, firstName, lastName, email, role, country, city, postalCode, created, updated, isVerified };
+    const { id, title, firstName, lastName, phone, email, role, country, city, postalCode, created, updated, isVerified } = account;
+    return { id, title, firstName, lastName, phone, email, role, country, city, postalCode, created, updated, isVerified };
 }
 
 async function sendVerificationEmail(account, origin) {
@@ -321,24 +308,3 @@ async function sendPasswordResetEmail(account, origin) {
                ${message}`
     });
 }
-
-
-
-async function getCurrentUser(req, res) {
-    try {
-        const userId = req.user.id; // Assuming JWT middleware attaches `user` to `req`
-        const account = await db.Account.findByPk(userId);
-
-        if (!account) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.json({
-            firstName: account.firstName,
-            email: account.email
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
-    }
-}
-

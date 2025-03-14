@@ -86,6 +86,7 @@ function registerSchema(req, res, next) {
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
         email: Joi.string().email().required(),
+        phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
         country: Joi.string().required(),
         city: Joi.string().required(),
@@ -179,8 +180,12 @@ function createSchema(req, res, next) {
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
         email: Joi.string().email().required(),
+        phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
+        role: Joi.string().valid('Admin', 'User').allow(''),
+        country: Joi.string().allow(''),
+        city: Joi.string().allow(''),
         role: Joi.string().valid(Role.Admin, Role.User).required()
     });
     validateRequest(req, next, schema);
@@ -193,37 +198,49 @@ function create(req, res, next) {
 }
 
 function updateSchema(req, res, next) {
-    const schemaRules = {
-        title: Joi.string().empty(''),
-        firstName: Joi.string().empty(''),
-        lastName: Joi.string().empty(''),
-        email: Joi.string().email().empty(''),
-        password: Joi.string().min(6).empty(''),
-        confirmPassword: Joi.string().valid(Joi.ref('password')).empty(''),
-        country: Joi.string().empty(''),
-        city: Joi.string().empty(''),
-        postalCode: Joi.string().empty(''),
-    };
+    const schema = Joi.object({
+        title: Joi.string().allow(''),
+        firstName: Joi.string().allow(''),
+        lastName: Joi.string().allow(''),
+        email: Joi.string().email().allow(''),
+        phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
+        password: Joi.string().min(6).allow(''),
+        confirmPassword: Joi.string().valid(Joi.ref('password')).allow(''),
+        role: Joi.string().valid('Admin', 'User').allow(''),
+        country: Joi.string().allow(''),
+        city: Joi.string().allow(''),
+        postalCode: Joi.string().allow(''),
+    }).with('password', 'confirmPassword');
 
-    // only admins can update role
-    if (req.user.role === Role.Admin) {
-        schemaRules.role = Joi.string().valid(Role.Admin, Role.User).empty('');
-    }
-
-    const schema = Joi.object(schemaRules).with('password', 'confirmPassword');
     validateRequest(req, next, schema);
 }
 
-function update(req, res, next) {
-    // users can update their own account and admins can update any account
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+async function update(req, res, next) {
+    try {
+        const userId = req.params.id;
+        const updateData = req.body;
 
-    accountService.update(req.params.id, req.body)
-        .then(account => res.json(account))
-        .catch(next);
+        // Ensure only allowed fields are updated
+        const allowedFields = ['firstName', 'lastName', 'phone', 'role'];
+        Object.keys(updateData).forEach(key => {
+            if (!allowedFields.includes(key)) {
+                delete updateData[key];
+            }
+        });
+
+        const user = await accountService.getById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        await accountService.update(userId, updateData);
+        const updatedUser = await accountService.getById(userId);
+
+        res.json(updatedUser);
+    } catch (error) {
+        next(error);
+    }
 }
+
+
 
 function _delete(req, res, next) {
     // users can delete their own account and admins can delete any account

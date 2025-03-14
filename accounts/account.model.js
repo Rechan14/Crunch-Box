@@ -4,6 +4,12 @@ module.exports = model;
 
 function model(sequelize) {
     const attributes = {
+        id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,   // Ensures ID is always required
+            autoIncrement: true, // Automatically increments the ID
+            primaryKey: true     // Marks it as the primary key
+        },
         email: { type: DataTypes.STRING, allowNull: false },
         passwordHash: { type: DataTypes.STRING, allowNull: false },
         title: { type: DataTypes.STRING, allowNull: false },
@@ -12,6 +18,7 @@ function model(sequelize) {
         country: { type: DataTypes.STRING, allowNull: false },
         city: { type: DataTypes.STRING, allowNull: false },
         postalCode: { type: DataTypes.STRING, allowNull: false },
+        phone: { type: DataTypes.STRING, allowNull: true },
         acceptTerms: { type: DataTypes.BOOLEAN },
         role: { type: DataTypes.STRING, allowNull: false },
         verificationToken: { type: DataTypes.STRING },
@@ -28,14 +35,11 @@ function model(sequelize) {
     };
 
     const options = {
-        // disable default timestamp fields (createdAt and updatedAt)
         timestamps: false, 
         defaultScope: {
-            // exclude password hash by default
             attributes: { exclude: ['passwordHash'] }
         },
         scopes: {
-            // include hash with this scope
             withHash: { attributes: {}, }
         }        
     };
