@@ -25,8 +25,6 @@ app.use(
 // API Routes
 app.use("/accounts", require("./accounts/accounts.controller"));
 
-
-
 // Swagger Docs Route
 app.use("/api-docs", require("_helpers/swagger"));
 
@@ -34,11 +32,13 @@ app.use("/api-docs", require("_helpers/swagger"));
 app.use(errorHandler);
 
 // Employee Route
-app.use("/employee", require("./employees/employees.controller")); // ✅ Ensure this line is after middleware setup
+// app.use("/employee", require("./employees/employees.controller")); //  Ensure this line is after middleware setup
 
 // Attendance Route
-app.use("/attendance", require("./attendance/attendance.controller"));
+// app.use("/attendance", require("./attendance/attendance.controller"));
 
+// Upload Route
+app.use("/uploads", require("./uploads/uploads.controller"));
 
 
 // LogIn Route
@@ -53,8 +53,8 @@ app.post("/api/auth/signin", async (req, res) => {
   return res.json({ token: "fake-jwt-token", user: { email } });
 });
 
-const uploadRoutes = require("./uploads/upload"); 
-app.use(uploadRoutes);
+// const uploadRoutes = require("./uploads/upload"); 
+// app.use(uploadRoutes);
 
 // Start Server
 const port = process.env.PORT || 4000;
