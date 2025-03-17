@@ -7,8 +7,6 @@ const Role = require('_helpers/role');
 const accountService = require('./account.service');
 
 // routes
-
-
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);

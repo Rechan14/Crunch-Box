@@ -29,7 +29,7 @@ async function initialize() {
         db.Attendance = require("../attendance/attendance.model")(sequelize);
 
         //  Fix Upload model loading
-        const UploadModel = require("../uploads/upload.model"); // Import correctly
+        const UploadModel = require("../upload/upload.model"); // Import correctly
         db.Upload = UploadModel(sequelize); // Pass sequelize instance
 
         // Debugging: Print loaded models
@@ -38,7 +38,11 @@ async function initialize() {
         if (!db.Upload) {
             throw new Error(" Upload model is NOT defined! Check db.js.");
         }
+        const Upload = db.Upload; // Ensure Upload model is correctly referenced
 
+        if (!Upload) {
+            throw new Error("Upload model is not defined! Check db.js.");
+        }
         // Define relationships
         db.Account.hasMany(db.RefreshToken, { onDelete: "CASCADE" });
         db.RefreshToken.belongsTo(db.Account);

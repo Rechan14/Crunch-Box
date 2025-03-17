@@ -15,7 +15,7 @@ module.exports = {
 //  Create new image entry in the database
 async function create(imageData) {
     try {
-        console.log("🔍 Creating Image Entry in DB:", imageData);
+        console.log("Creating Image Entry in DB:", imageData);
         
         // Fix: Ensure Upload model is referenced from db
         if (!db.Upload) {

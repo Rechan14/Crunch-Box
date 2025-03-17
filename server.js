@@ -38,7 +38,7 @@ app.use(errorHandler);
 // app.use("/attendance", require("./attendance/attendance.controller"));
 
 // Upload Route
-app.use("/uploads", require("./uploads/uploads.controller"));
+app.use("/uploads", require("./upload/uploads.controller"));
 
 
 // LogIn Route

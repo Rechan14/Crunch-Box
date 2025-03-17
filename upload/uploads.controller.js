@@ -3,7 +3,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const router = express.Router();
-const uploadService = require("../uploads/upload.service");
+const uploadService = require("../upload/upload.service");
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "../uploads");
