@@ -26,7 +26,7 @@ app.use(
 
 // API Routes
 app.use("/accounts", require("./accounts/accounts.controller"));
-app.use("/employee", require("./employee/employees.controller"));
+app.use("/employee", require("./employees/employees.controller"));
 app.use("/uploads", require("./upload/uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
 

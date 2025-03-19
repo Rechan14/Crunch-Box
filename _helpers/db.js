@@ -30,7 +30,7 @@ async function initialize() {
         // Load models properly
         db.Account = require("../accounts/account.model")(sequelize, Sequelize);
         db.RefreshToken = require("../accounts/refresh-token.model")(sequelize, Sequelize);
-        db.Employee = require("../employee/employee.model")(sequelize, Sequelize);
+        db.Employee = require("../employees/employee.model")(sequelize, Sequelize);
         db.Upload = require("../upload/upload.model")(sequelize, Sequelize);
 
         // Debugging: Log loaded models
