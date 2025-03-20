@@ -20,7 +20,7 @@ app.use(
   })
 );
 
-// ✅ Serve uploaded profile images
+// Serve uploaded profile images
 app.use("/profile-uploads", express.static("profile-uploads"));
 
 // API Routes
