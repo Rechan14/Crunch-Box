@@ -6,7 +6,6 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const errorHandler = require("_middleware/error-handler");
-// const EmailModule = require('./email-senders/email-sender.module');
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -21,23 +20,15 @@ app.use(
   })
 );
 
-// app.use(bodyParser.json()); // Ensure body is parsed properly
-// EmailModule(app); // Register the Email Module
+// ✅ Serve uploaded profile images
+app.use("/profile-uploads", express.static("profile-uploads"));
 
 // API Routes
 app.use("/accounts", require("./accounts/accounts.controller"));
 app.use("/employee", require("./employees/employees.controller"));
 app.use("/uploads", require("./upload/uploads.controller"));
+app.use("/profile-uploads", require("./upload/profile-uploads.controller")); // Add profile uploads API
 app.use("/api-docs", require("_helpers/swagger"));
-
-// Authentication Route
-app.post("/api/auth/signin", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
-  }
-  return res.json({ token: "fake-jwt-token", user: { email } });
-});
 
 // Global Error Handler
 app.use(errorHandler);

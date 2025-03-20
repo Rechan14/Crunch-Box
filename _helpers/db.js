@@ -32,6 +32,7 @@ async function initialize() {
         db.RefreshToken = require("../accounts/refresh-token.model")(sequelize, Sequelize);
         db.Employee = require("../employees/employee.model")(sequelize, Sequelize);
         db.Upload = require("../upload/upload.model")(sequelize, Sequelize);
+        db.ProfileUpload = require("../upload/profile-uploads.model")(sequelize, Sequelize);
 
         // Debugging: Log loaded models
         console.log("Loaded Models:", Object.keys(db));
@@ -39,6 +40,10 @@ async function initialize() {
         // Define relationships
         db.Account.hasMany(db.RefreshToken, { onDelete: "CASCADE" });
         db.RefreshToken.belongsTo(db.Account);
+
+        // If Profile Upload is related to Account
+        db.Account.hasOne(db.ProfileUpload, { onDelete: "CASCADE" });
+        db.ProfileUpload.belongsTo(db.Account);
 
         // Sync models with database
         await sequelize.sync({ alter: true });
