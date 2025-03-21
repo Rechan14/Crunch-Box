@@ -1,16 +1,14 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const router = express.Router();
-const db = require("../_helpers/db");  // Make sure this is the correct path
-const { Attendance, Upload } = db;  // Ensure 'Upload' is correctly destructured from db
+const db = require("../_helpers/db");  // Ensure this is the correct path
+const { Attendance } = db;  // Only require Attendance model
 
 // POST request to record attendance
 router.post("/", async (req, res) => {
   try {
     console.log("Received attendance payload:", req.body);
 
-    const { shifts, image, timeIn } = req.body;
+    const { shifts, timeIn } = req.body;
 
     // Check if the required fields are present
     if (!shifts || !timeIn) {
@@ -20,41 +18,12 @@ router.post("/", async (req, res) => {
     // Format the date for the 'date' field (YYYY-MM-DD)
     const today = new Date(timeIn).toISOString().split("T")[0];
 
-    let uploadedImage = null;
-
-    // Step 1: Upload image if present
-    if (image) {
-      console.log("Uploading image...");
-
-      const imageName = `image_${Date.now()}.png`; // Generate a unique image name
-      const uploadPath = path.join(__dirname, "../uploads", imageName);  // 'uploads' folder
-
-      // Decode base64 string and write to file
-      const base64Data = image.replace(/^data:image\/png;base64,/, '');  // Remove base64 prefix
-      try {
-        // Write the image to the uploads folder
-        fs.writeFileSync(uploadPath, base64Data, 'base64');
-
-        // Save image reference to the database
-        uploadedImage = await Upload.create({
-          image_name: imageName,
-          image: uploadPath,  // Save the image path
-        });
-
-        console.log("Image saved to DB:", uploadedImage.toJSON());
-      } catch (imageError) {
-        console.error("Failed to upload image:", imageError);
-        return res.status(500).json({ message: "Failed to upload image", error: imageError.message });
-      }
-    }
-
-    // Step 2: Create the attendance record (without image)
+    // Step 1: Create the attendance record without handling image upload
     const newAttendanceData = {
       timeIn: new Date(timeIn),
       timeOut: null,
       shifts,
       date: today,
-      // We don't link the image to attendance in this step
     };
 
     try {
