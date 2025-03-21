@@ -1,9 +1,7 @@
-// upload.model.js
 module.exports = (sequelize, DataTypes) => {
-  const Upload = sequelize.define('Upload', {
+  const Upload = sequelize.define("Upload", {
     id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       autoIncrement: true,
       primaryKey: true,
     },

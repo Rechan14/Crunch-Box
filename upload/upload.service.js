@@ -1,8 +1,8 @@
 const db = require('../_helpers/db'); 
-const Upload = db.Upload; //  Ensure db.Upload is correctly defined
+const Upload = db.Upload; // Ensure db.Upload is correctly defined
 
 if (!Upload) {
-    console.error(" Upload model is undefined. Check your db.js file.");
+    console.error("Upload model is undefined. Check your db.js file.");
 }
 
 module.exports = {
@@ -12,12 +12,11 @@ module.exports = {
     deleteById
 };
 
-//  Create new image entry in the database
+// Create new image entry in the database
 async function create(imageData) {
     try {
         console.log("Creating Image Entry in DB:", imageData);
         
-        // Fix: Ensure Upload model is referenced from db
         if (!db.Upload) {
             throw new Error("Upload model is not defined! Check db.js.");
         }
@@ -36,39 +35,36 @@ async function create(imageData) {
     }
 }
 
-module.exports = { create };
-
-//  Retrieve an image by ID
+// Retrieve an image by ID
 async function getById(id) {
     try {
         return await Upload.findByPk(id);
     } catch (error) {
-        console.error(" Error retrieving image:", error);
+        console.error("Error retrieving image:", error);
         throw error;
     }
 }
 
-//  Retrieve all images
+// Retrieve all images
 async function getAll() {
     try {
         return await Upload.findAll();
     } catch (error) {
-        console.error(" Error retrieving all images:", error);
+        console.error("Error retrieving all images:", error);
         throw error;
     }
 }
 
-//  Delete an image by ID
+// Delete an image by ID
 async function deleteById(id) {
     try {
         const image = await Upload.findByPk(id);
         if (!image) throw new Error('Image not found');
 
         await image.destroy();
-        console.log(" Image deleted:", id);
+        console.log("Image deleted:", id);
     } catch (error) {
-        console.error(" Error deleting image:", error);
+        console.error("Error deleting image:", error);
         throw error;
     }
 }
-

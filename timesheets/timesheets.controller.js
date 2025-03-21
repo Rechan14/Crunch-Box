@@ -1,3 +1,4 @@
+// timesheets.controller.js
 const db = require("../_helpers/db");
 const { Timesheet, Upload } = db;
 
@@ -7,23 +8,24 @@ const TimesheetController = {
       const { shifts, image } = req.body;
       const today = new Date().toISOString().split("T")[0];
 
-      const upload = await Upload.findOne({ where: { image } });
+      // Ensure you're using image_name for matching
+      const upload = await Upload.findOne({ where: { image_name: image } });  // Use image_name for better matching
       if (!upload) return res.status(404).json({ message: "Image not found" });
 
       const newTimesheet = await Timesheet.create({
-        employeeId: 1, // for now hardcoded
+        employeeId: 1, // Dynamically assign employeeId
         date: today,
         timeIn: new Date().toLocaleTimeString("en-US", { hour12: false }),
         timeOut: "00:00:00",
         totalHours: 0,
         shift: shifts,
-        upload_id: upload.id,
+        upload_id: upload.id,  // Ensure this matches with the Upload model's id field
       });
 
       res.status(201).json({ message: "Time in recorded", data: newTimesheet });
     } catch (error) {
       console.error("Failed to save attendance:", error);
-      res.status(500).json({ message: "Failed to save attendance", error });
+      res.status(500).json({ message: "Failed to save attendance", error: error.message });
     }
   },
 
