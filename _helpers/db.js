@@ -24,18 +24,24 @@ async function initialize() {
         await sequelize.authenticate();
         console.log("Database connection established successfully.");
 
-        // Attach Sequelize instance
+        // Attach Sequelize instance to db object
         db.sequelize = sequelize;
 
-        // Load models properly
+        // Load models
         db.Account = require("../accounts/account.model")(sequelize, Sequelize);
         db.RefreshToken = require("../accounts/refresh-token.model")(sequelize, Sequelize);
         db.Timesheet = require("../timesheets/timesheet.model")(sequelize, Sequelize);
         db.Employee = require("../employees/employee.model")(sequelize, Sequelize);
-        db.Upload = require("../upload/upload.model")(sequelize, Sequelize);
+        db.Upload = require("../upload/upload.model")(sequelize, Sequelize); // Check this line
         db.ProfileUpload = require("../upload/profile-uploads.model")(sequelize, Sequelize);
-        db.Attendance = require("../attendance/attendance.model")(sequelize, Sequelize);
+        db.Attendance = require("../attendances/attendance.model")(sequelize, Sequelize);
 
+        // Check if Upload model is loaded correctly
+        if (!db.Upload) {
+            console.error("Error: Upload model is undefined. Check your upload.model.js file.");
+        } else {
+            console.log("Upload model loaded successfully.");
+        }
 
         // Debugging: Log loaded models
         console.log("Loaded Models:", Object.keys(db));
@@ -44,19 +50,22 @@ async function initialize() {
         db.Account.hasMany(db.RefreshToken, { onDelete: "CASCADE" });
         db.RefreshToken.belongsTo(db.Account);
 
-        // If Profile Upload is related to Account
         db.Account.hasOne(db.ProfileUpload, { onDelete: "CASCADE" });
         db.ProfileUpload.belongsTo(db.Account);
 
-        //
-        db.Timesheet.belongsTo(db.Employee, {foreignKey: 'employeeId'});
+        db.Timesheet.belongsTo(db.Employee, { foreignKey: 'employeeId' });
         db.Employee.hasMany(db.Timesheet, { foreignKey: 'employeeId' });
+
+        // Relationship between Attendance and Upload
+        db.Attendance.belongsTo(db.Upload, { foreignKey: 'uploadId' });
+        db.Upload.hasMany(db.Attendance, { foreignKey: 'uploadId' });
 
         // Sync models with database
         await sequelize.sync({ alter: true });
         console.log("Database & tables synchronized.");
     } catch (error) {
         console.error("Database initialization error:", error);
+        throw error;
     }
 }
 

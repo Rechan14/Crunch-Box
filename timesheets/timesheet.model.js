@@ -18,15 +18,15 @@ module.exports = (sequelize, DataTypes) => {
       },
       timeIn: {
         type: DataTypes.TIME,
-        allowNull: false,
+        allowNull: true,
       },
       timeOut: {
         type: DataTypes.TIME,
-        allowNull: false,
-      },
+        allowNull: true, 
+      },      
       totalHours: {
         type: DataTypes.FLOAT,
-        allowNull: false,
+        allowNull: true,
       },
       shift: {
         type: DataTypes.STRING,

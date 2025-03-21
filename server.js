@@ -30,7 +30,7 @@ app.use('/api/timesheets', require('./timesheets/timesheets.routes'));
 app.use("/uploads", require("./upload/uploads.controller"));
 app.use("/profile-uploads", require("./upload/profile-uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
-app.use("/attendance", require("./attendance/attendance.controller"));
+app.use("/attendance", require("./attendances/attendances.controller"));
 
 
 
