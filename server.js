@@ -26,9 +26,14 @@ app.use("/profile-uploads", express.static("profile-uploads"));
 // API Routes
 app.use("/accounts", require("./accounts/accounts.controller"));
 app.use("/employee", require("./employees/employees.controller"));
+app.use('/api/timesheets', require('./timesheets/timesheets.routes')); 
 app.use("/uploads", require("./upload/uploads.controller"));
-app.use("/profile-uploads", require("./upload/profile-uploads.controller")); // Add profile uploads API
+app.use("/profile-uploads", require("./upload/profile-uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
+app.use("/attendance", require("./attendance/attendance.controller"));
+
+
+
 
 // Global Error Handler
 app.use(errorHandler);

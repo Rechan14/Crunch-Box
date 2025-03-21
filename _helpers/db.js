@@ -30,9 +30,12 @@ async function initialize() {
         // Load models properly
         db.Account = require("../accounts/account.model")(sequelize, Sequelize);
         db.RefreshToken = require("../accounts/refresh-token.model")(sequelize, Sequelize);
+        db.Timesheet = require("../timesheets/timesheet.model")(sequelize, Sequelize);
         db.Employee = require("../employees/employee.model")(sequelize, Sequelize);
         db.Upload = require("../upload/upload.model")(sequelize, Sequelize);
         db.ProfileUpload = require("../upload/profile-uploads.model")(sequelize, Sequelize);
+        db.Attendance = require("../attendance/attendance.model")(sequelize, Sequelize);
+
 
         // Debugging: Log loaded models
         console.log("Loaded Models:", Object.keys(db));
@@ -44,6 +47,10 @@ async function initialize() {
         // If Profile Upload is related to Account
         db.Account.hasOne(db.ProfileUpload, { onDelete: "CASCADE" });
         db.ProfileUpload.belongsTo(db.Account);
+
+        //
+        db.Timesheet.belongsTo(db.Employee, {foreignKey: 'employeeId'});
+        db.Employee.hasMany(db.Timesheet, { foreignKey: 'employeeId' });
 
         // Sync models with database
         await sequelize.sync({ alter: true });
