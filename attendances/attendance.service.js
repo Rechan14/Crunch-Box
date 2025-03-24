@@ -12,20 +12,32 @@ async function recordAttendance(data) {
 
     const date = new Date(time).toISOString().split("T")[0];
 
-    // Use `db.Op` instead of `db.Sequelize.Op`
+    const startOfDay = new Date(`${date}T00:00:00.000Z`);
+    const endOfDay = new Date(`${date}T23:59:59.999Z`);
+
+    // Optional: Debug log
+    console.log("Checking attendance for:", imageId, "Shift:", shifts);
+    console.log("Date range:", startOfDay, "to", endOfDay);
+
     let attendance = await db.Attendance.findOne({
       where: {
         imageId,
         shifts,
         createdAt: {
-          [db.Op.startsWith]: date, // ✅ Fix: Use `db.Op` instead of `db.Sequelize.Op`
+          [db.Op.between]: [startOfDay, endOfDay],
         },
       },
     });
 
     if (!attendance) {
-      attendance = await db.Attendance.create({ imageId, shifts, timeIn: time });
+      // First time: Time In
+      attendance = await db.Attendance.create({
+        imageId,
+        shifts,
+        timeIn: time,
+      });
     } else if (!attendance.timeOut) {
+      // Second time: Time Out
       attendance.timeOut = time;
       await attendance.save();
     } else {
@@ -38,7 +50,6 @@ async function recordAttendance(data) {
     throw error;
   }
 }
-
 
 // Get all attendance records
 async function getAllAttendances() {

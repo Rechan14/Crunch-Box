@@ -3,7 +3,7 @@ const router = express.Router();
 const attendanceService = require("../attendances/attendance.service");
 
 // Handle Time In & Time Out with one endpoint
-router.post("/record", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     console.log("Received attendance payload:", req.body);
     const attendance = await attendanceService.recordAttendance(req.body);
