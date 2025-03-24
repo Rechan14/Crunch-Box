@@ -31,7 +31,44 @@ app.use("/uploads", require("./upload/uploads.controller"));
 app.use("/profile-uploads", require("./upload/profile-uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
 app.use("/attendances", require("./attendances/attendances.controller"));
+app.post('/action-logs', async (req, res) => {
+  const { shiftId, userId, timeIn, timeOut } = req.body;
+  try {
+    // Log the shift change
+    await logShiftChange(shiftId, userId, timeIn, timeOut);
+    res.status(201).json({
+      message: "Shift change logged successfully.",
+      data: { shiftId, userId, timeIn, timeOut },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error logging shift change." });
+  }
+});
 
+// Endpoint to get all action logs
+app.get('/action-logs', async (req, res) => {
+  try {
+    const actionLogs = await ActionLog.findAll();
+    res.json(actionLogs);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching action logs.");
+  }
+});
+
+// Endpoint to approve a shift change
+app.put('/action-logs/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Approve the shift change
+    await approveShiftChange(id);
+    res.send("Shift change approved successfully.");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error approving shift change.");
+  }
+});
 
 
 
