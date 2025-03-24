@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const attendanceService = require("../attendances/attendance.service");
+const AttendanceLog = require("../attendances/attendance_log.model"); 
+const Attendance = require("../attendances/attendance.model"); 
+const db = require("_helpers/db");  
 
-// Handle Time In & Time Out (Ensures user-specific records)
+
 router.post("/", async (req, res) => {
   try {
     console.log("Received attendance payload:", req.body);
@@ -40,6 +43,54 @@ router.get("/:id", async (req, res) => {
     res.json(attendance);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Update Attendance and Log Changes
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    console.log("Updating attendance ID:", id, "with data:", updates); // Debug log
+
+    const attendance = await Attendance.findByPk(id);
+if (!attendance) {
+    return res.status(404).json({ message: "Attendance record not found!" });
+    }
+    qconsole.log("Attendance record found:", attendance.toJSON());
+
+    // Format time correctly
+    const formattedUpdates = {
+      ...updates,
+      timeIn: updates.timeIn ? new Date(`${updates.timeIn}:00Z`) : null,
+      timeOut: updates.timeOut ? new Date(`${updates.timeOut}:00Z`) : null,
+    };
+
+    // Track changes in AttendanceLog
+    const logEntries = [];
+    for (const key of Object.keys(formattedUpdates)) {
+      if (formattedUpdates[key] !== attendance[key]) {
+        logEntries.push({
+          attendanceId: attendance.id,
+          userId: req.user.id, // Assuming user is authenticated
+          fieldChanged: key,
+          oldValue: attendance[key] ? attendance[key].toString() : null,
+          newValue: formattedUpdates[key] ? formattedUpdates[key].toString() : null,
+        });
+      }
+    }
+
+    await attendance.update(formattedUpdates);
+
+    if (logEntries.length > 0) {
+      await AttendanceLog.bulkCreate(logEntries);
+    }
+
+    res.json({ message: "Attendance updated successfully", data: attendance });
+  } catch (error) {
+    console.error("Error updating attendance:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
