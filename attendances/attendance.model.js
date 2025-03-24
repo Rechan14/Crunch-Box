@@ -2,8 +2,8 @@ module.exports = (sequelize, DataTypes) => {
   const Attendance = sequelize.define("Attendance", {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     userId: { type: DataTypes.INTEGER, allowNull: false }, // Track which user the record belongs to
-    // imageId: { type: DataTypes.STRING(255), allowNull: false }, // Image for Time In
-    // timeOutImageId: { type: DataTypes.STRING(255), allowNull: true }, // Image for Time Out
+    imageId: { type: DataTypes.STRING(255), allowNull: false }, // Image for Time In
+    timeOutImageId: { type: DataTypes.STRING(255), allowNull: true }, // Image for Time Out
     shifts: { type: DataTypes.STRING, allowNull: false },
     date: { type: DataTypes.DATEONLY, allowNull: false },
     timeIn: { type: DataTypes.DATE, allowNull: false },

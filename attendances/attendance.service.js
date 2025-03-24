@@ -27,18 +27,28 @@ async function recordAttendance(data) {
         shifts,
         date: dateOnly,
         timeIn: timeObj,
+        totalHours: 0.00, // Ensure default value
       });
     } else {
-      // Update existing Time Out
+      // Ensure timeIn exists before calculating totalHours
+      if (attendance.timeIn) {
+        const timeInDate = new Date(attendance.timeIn);
+        const timeOutDate = new Date(timeObj);
+    
+        // Calculate total hours and format it to 2 decimal places
+        const hoursWorked = (timeOutDate - timeInDate) / (1000 * 60 * 60);
+        attendance.totalHours = parseFloat(hoursWorked.toFixed(2));
+      } else {
+        attendance.totalHours = 0.00; // Fallback if something goes wrong
+      }
+    
+      // Update timeOut and save the record
       attendance.timeOut = timeObj;
       attendance.timeOutImageId = imageId;
-      
-      // Calculate total hours
-      attendance.totalHours = (timeObj - new Date(attendance.timeIn)) / (1000 * 60 * 60); // Convert ms to hours
-
+    
       await attendance.save();
     }
-
+    
     return attendance;
   } catch (error) {
     console.error("Error recording attendance:", error);

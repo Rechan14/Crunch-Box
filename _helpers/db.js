@@ -26,7 +26,7 @@ async function initialize() {
 
         // Attach Sequelize instance to db object
         db.sequelize = sequelize;
-        db.Op = Op; // Export Op for use in services
+        db.Op = Op; //Export Op for use in services
 
         // Load models
         console.log('Loading Upload model from:', require.resolve("../upload/upload.model"));
