@@ -31,20 +31,22 @@ app.use("/uploads", require("./upload/uploads.controller"));
 app.use("/profile-uploads", require("./upload/profile-uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
 app.use("/attendances", require("./attendances/attendances.controller"));
-app.post('/action-logs', async (req, res) => {
-  const { shiftId, userId, timeIn, timeOut } = req.body;
-  try {
-    // Log the shift change
-    await logShiftChange(shiftId, userId, timeIn, timeOut);
-    res.status(201).json({
-      message: "Shift change logged successfully.",
-      data: { shiftId, userId, timeIn, timeOut },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error logging shift change." });
-  }
-});
+app.use("/action-logs", require("./attendances/action_logs.controller"));
+
+// app.post('/action-logs', async (req, res) => {
+//   const { shiftId, userId, timeIn, timeOut } = req.body;
+//   try {
+//     // Log the shift change
+//     await logShiftChange(shiftId, userId, timeIn, timeOut);
+//     res.status(201).json({
+//       message: "Shift change logged successfully.",
+//       data: { shiftId, userId, timeIn, timeOut },
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Error logging shift change." });
+//   }
+// });
 
 // Endpoint to get all action logs
 app.get('/action-logs', async (req, res) => {
