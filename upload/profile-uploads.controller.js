@@ -26,31 +26,46 @@ const upload = multer({ storage });
 // Handle Profile Image Upload
 router.post("/", upload.single("profile_image"), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+  
+      const { account_id } = req.body;
+      if (!account_id) {
+        return res.status(400).json({ message: "Account ID is required" });
+      }
+  
+      const profile_image = `/profile-uploads/${req.file.filename}`;
+      console.log("Saving Profile Image to DB:", { account_id, profile_image });
+  
+      // Check if profile already exists
+      const existingProfile = await db.ProfileUpload.findOne({ where: { account_id } });
+  
+      let updatedProfile;
+      if (existingProfile) {
+        // Delete old image file (optional cleanup)
+        const oldPath = path.join(profileUploadDir, path.basename(existingProfile.profile_image));
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
         }
-
-        const { account_id } = req.body;
-        if (!account_id) {
-            return res.status(400).json({ message: "Account ID is required" });
-        }
-
-        const profile_image = `/profile-uploads/${req.file.filename}`;
-
-        console.log("Saving Profile Image to DB:", { account_id, profile_image });
-
-        // Store profile image in database
-        const newProfileImage = await db.ProfileUpload.create({ account_id, profile_image });
-
-        res.status(201).json({
-            message: "Profile image uploaded successfully",
-            profile: newProfileImage,
-        });
+  
+        // Update existing record
+        await existingProfile.update({ profile_image });
+        updatedProfile = existingProfile;
+      } else {
+        // Create new record
+        updatedProfile = await db.ProfileUpload.create({ account_id, profile_image });
+      }
+  
+      res.status(201).json({
+        message: "Profile image uploaded successfully",
+        profile: updatedProfile,
+      });
     } catch (error) {
-        console.error("Error in profile upload:", error);
-        res.status(500).json({ message: "Failed to upload profile image" });
+      console.error("Error in profile upload:", error);
+      res.status(500).json({ message: "Failed to upload profile image" });
     }
-});
+  });  
 
 // Fetch Profile Image for a User
 router.get("/:account_id", async (req, res) => {
