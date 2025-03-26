@@ -24,6 +24,16 @@ module.exports = {
     delete: _delete
 };
 
+async function getAccountModel() {
+    await db.ready;
+    return db.Account;
+}
+
+async function getEmployeeModel() {
+    await db.ready;
+    return db.Employee;
+}
+
 async function getAllWithPagination(page, limit) {
     const offset = (page - 1) * limit;
 
@@ -307,8 +317,8 @@ async function sendAlreadyRegisteredEmail(email, origin) {
 async function sendPasswordResetEmail(account, origin) {
     let message;
     if (origin) {
-        const resetUrl = `${account.resetToken}`;
-        message = `<p>Here's your verification code to reset your password, the code will be valid for 30 minutes:</p>
+        const resetUrl = `${origin}/account/reset-password?token=${account.resetToken}`;
+        message = `<p>Please click the below link to reset your password, the link will be valid for 1 day:</p>
                    <p><a href="${resetUrl}">${resetUrl}</a></p>`;
     } else {
         message = `<p>Please use the below token to reset your password with the <code>/account/reset-password</code> api route:</p>

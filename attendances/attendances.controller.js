@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const attendanceService = require("../attendances/attendance.service");
-const AttendanceLog = require("../attendances/attendance_log.model"); 
 const Attendance = require("../attendances/attendance.model"); 
 const db = require("_helpers/db");  
 

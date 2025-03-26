@@ -23,13 +23,22 @@ db.ready.then(() => {
   // View all action logs
   router.get("/", async (req, res) => {
     try {
-      const logs = await ActionLog.findAll();
+      const logs = await ActionLog.findAll({
+        include: [
+          {
+            model: db.Account, // Include user details
+            attributes: ["firstName", "lastName"], // Fetch only these fields
+          },
+        ],
+      });      
+  
+      console.log("API Response:", logs); // Debugging
       res.json(logs);
     } catch (error) {
       console.error("Fetch Error:", error);
       res.status(500).send("Error fetching action logs.");
     }
-  });
+  });  
 
   // Approve shift change
   router.put("/:id/approve", async (req, res) => {

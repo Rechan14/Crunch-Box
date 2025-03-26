@@ -58,5 +58,9 @@ module.exports = (sequelize, DataTypes) => {
     await action.save();
   };
 
+  ActionLog.associate = (models) => {
+    ActionLog.belongsTo(models.Account, { foreignKey: "userId" });
+  };
+  
   return ActionLog;
 };
