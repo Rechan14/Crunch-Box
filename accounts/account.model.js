@@ -18,7 +18,7 @@ function model(sequelize) {
         role: { type: DataTypes.STRING, allowNull: false },
         country: { type: DataTypes.STRING, allowNull: false },
         city: { type: DataTypes.STRING, allowNull: false },
-        postalCode: { type: DataTypes.STRING, allowNull: false },
+        postalCode: { type: DataTypes.STRING, allowNull: true },
         phone: { type: DataTypes.STRING, allowNull: true },
         acceptTerms: { type: DataTypes.BOOLEAN },
         verificationToken: { type: DataTypes.STRING },

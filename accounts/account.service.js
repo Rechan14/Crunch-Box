@@ -24,16 +24,6 @@ module.exports = {
     delete: _delete
 };
 
-async function getAccountModel() {
-    await db.ready;
-    return db.Account;
-}
-
-async function getEmployeeModel() {
-    await db.ready;
-    return db.Employee;
-}
-
 async function getAllWithPagination(page, limit) {
     const offset = (page - 1) * limit;
 
@@ -107,7 +97,7 @@ async function revokeToken({ token, ipAddress }) {
 
 async function register(params, origin) {
     try {
-        console.log("🔍 Incoming Registration Data:", params);
+        console.log("Incoming Registration Data:", params);
 
         // Validate if email is already registered
         const existingAccount = await db.Account.findOne({ where: { email: params.email } });
@@ -254,9 +244,13 @@ async function hash(password) {
 }
 
 function generateJwtToken(account) {
-    // create a jwt token containing the account id that expires in 15 minutes
-    return jwt.sign({ sub: account.id, id: account.id }, config.secret, { expiresIn: '15m' });
+    return jwt.sign(
+        { sub: account.id, id: account.id, role: account.role },
+        config.secret,
+        { expiresIn: '20d' }
+    );
 }
+
 
 function generateRefreshToken(account, ipAddress) {
     // create a refresh token that expires in 7 days

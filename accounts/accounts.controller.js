@@ -17,9 +17,11 @@ router.post('/validate-reset-token', validateResetTokenSchema, validateResetToke
 router.post('/reset-password', resetPasswordSchema, resetPassword);
 router.get('/', getAll);
 router.get('/:id', authorize(), getById);
-router.post('/', authorize(Role.Admin), createSchema, create);
+router.post('/', authorize('Admin'), createSchema, create);
 router.put('/:id', authorize(), updateSchema, update);
 router.delete('/:id', authorize(), _delete);
+
+
 
 
 module.exports = router;
@@ -162,8 +164,9 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-    // users can get their own account and admins can get any account
-    if (Number(req.params.id) !== req.user.id && req.user.role !== Role.Admin) {
+    console.log("Decoded User:", req.user); // Debugging
+
+    if (Number(req.params.id) !== req.user.id && req.user.role !== 'Admin') {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -171,6 +174,7 @@ function getById(req, res, next) {
         .then(account => account ? res.json(account) : res.sendStatus(404))
         .catch(next);
 }
+
 
 function createSchema(req, res, next) {
     const schema = Joi.object({
@@ -184,16 +188,26 @@ function createSchema(req, res, next) {
         role: Joi.string().valid('Admin', 'User').allow(''),
         country: Joi.string().allow(''),
         city: Joi.string().allow(''),
-        role: Joi.string().valid(Role.Admin, Role.User).required()
+        // role: Joi.string().valid(Role.Admin, Role.User).required()
+        postalCode: Joi.number().integer().required(),
     });
     validateRequest(req, next, schema);
 }
 
 function create(req, res, next) {
-    accountService.create(req.body)
+    console.log("Creating Account...");  
+    console.log("Authenticated User:", req.user);  
+    console.log("Received Data:", req.body);  
+
+    accountService.create(req.body, req.user)
         .then(account => res.json(account))
-        .catch(next);
+        .catch(error => {
+            console.error("Error creating account:", error);
+            res.status(500).json({ message: "Internal Server Error" });
+        });
 }
+
+
 
 function updateSchema(req, res, next) {
     const schema = Joi.object({

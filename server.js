@@ -25,8 +25,7 @@ app.use("/profile-uploads", express.static("profile-uploads"));
 
 // API Routes
 app.use("/accounts", require("./accounts/accounts.controller"));
-// app.use("/employee", require("./employees/employees.controller"));
-app.use('/api/timesheets', require('./timesheets/timesheets.routes')); 
+app.use('/api/timesheets', require('./timesheets/timesheets.routes'));
 app.use("/uploads", require("./upload/uploads.controller"));
 app.use("/profile-uploads", require("./upload/profile-uploads.controller"));
 app.use("/api-docs", require("_helpers/swagger"));
@@ -39,7 +38,7 @@ app.get('/action-logs', async (req, res) => {
     const actionLogs = await ActionLog.findAll();
     res.json(actionLogs);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching action logs:", error);
     res.status(500).send("Error fetching action logs.");
   }
 });
@@ -48,16 +47,13 @@ app.get('/action-logs', async (req, res) => {
 app.put('/action-logs/:id/approve', async (req, res) => {
   const { id } = req.params;
   try {
-    // Approve the shift change
-    await approveShiftChange(id);
+    await ActionLog.approveShiftChange(id, Shift);
     res.send("Shift change approved successfully.");
   } catch (error) {
-    console.error(error);
+    console.error("Error approving shift change:", error);
     res.status(500).send("Error approving shift change.");
   }
 });
-
-
 
 // Global Error Handler
 app.use(errorHandler);
