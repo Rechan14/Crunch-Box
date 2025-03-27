@@ -40,33 +40,47 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
 
-  // Static method to approve a shift change
-  ActionLog.approveShiftChange = async function (id, ShiftModel) {
-    try {
-      const action = await ActionLog.findByPk(id);
-      if (!action || action.status !== "pending") {
-        throw new Error("Pending action not found");
-      }
-
-      const match = action.details.match(/Time In - (.*), Time Out - (.*)/);
-      if (!match) throw new Error("Invalid action details format");
-
-      const [, timeIn, timeOut] = match;
-
-      const shift = await ShiftModel.findByPk(action.shiftId);
-      if (!shift) throw new Error("Shift not found");
-
-      shift.timeIn = timeIn;
-      shift.timeOut = timeOut;
-      await shift.save();
-
-      action.status = "approved";
-      await action.save();
-    } catch (error) {
-      console.error("Error in approveShiftChange:", error);
-      throw error; // Rethrow error to be caught by controller
+// Static method to approve a shift change
+ActionLog.approveShiftChange = async function (id, ShiftModel) {
+  try {
+    const action = await ActionLog.findByPk(id);
+    if (!action || action.status !== "pending") {
+      throw new Error("Pending action not found");
     }
-  };
+
+    // Debug: show full actionLog record
+    console.log("ActionLog:", action.toJSON());
+
+    const match = action.details.match(/Time In - (.*), Time Out - (.*)/);
+    if (!match) throw new Error("Invalid action details format");
+
+    const [, timeIn, timeOut] = match;
+
+    // Debug: show what shiftId we're using
+    console.log("Looking for shiftId:", action.shiftId);
+
+    const shift = await ShiftModel.findByPk(action.shiftId);
+
+    // Debug: if no shift found
+    if (!shift) {
+      const allShifts = await ShiftModel.findAll({ attributes: ["id"] });
+      console.error(`Shift not found for shiftId = ${action.shiftId}`);
+      console.log("Existing Timesheet IDs:", allShifts.map(s => s.id));
+      throw new Error("Shift not found");
+    }
+
+    shift.timeIn = timeIn;
+    shift.timeOut = timeOut;
+    await shift.save();
+
+    action.status = "approved";
+    await action.save();
+  } catch (error) {
+    console.error("Error in approveShiftChange:", error);
+    throw error;
+  }
+};
+
 
   ActionLog.associate = (models) => {
     ActionLog.belongsTo(models.Account, { foreignKey: "userId" });

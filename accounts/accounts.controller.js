@@ -21,9 +21,6 @@ router.post('/', authorize('Admin'), createSchema, create);
 router.put('/:id', authorize(), updateSchema, update);
 router.delete('/:id', authorize(), _delete);
 
-
-
-
 module.exports = router;
 
 function authenticateSchema(req, res, next) {
@@ -85,6 +82,7 @@ function registerSchema(req, res, next) {
         title: Joi.string().required(),
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
+        department: Joi.string().required(),
         email: Joi.string().email().required(),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
@@ -175,12 +173,12 @@ function getById(req, res, next) {
         .catch(next);
 }
 
-
 function createSchema(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().required(),
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
+        department: Joi.string().required(),
         email: Joi.string().email().required(),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
@@ -188,7 +186,6 @@ function createSchema(req, res, next) {
         role: Joi.string().valid('Admin', 'User').allow(''),
         country: Joi.string().allow(''),
         city: Joi.string().allow(''),
-        // role: Joi.string().valid(Role.Admin, Role.User).required()
         postalCode: Joi.number().integer().required(),
     });
     validateRequest(req, next, schema);
@@ -207,13 +204,12 @@ function create(req, res, next) {
         });
 }
 
-
-
 function updateSchema(req, res, next) {
     const schema = Joi.object({
         title: Joi.string().allow(''),
         firstName: Joi.string().allow(''),
         lastName: Joi.string().allow(''),
+        department: Joi.string().allow(''),
         email: Joi.string().email().allow(''),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).allow(''),
@@ -233,7 +229,7 @@ async function update(req, res, next) {
         const updateData = req.body;
 
         // Ensure only allowed fields are updated
-        const allowedFields = ['firstName', 'lastName', 'phone', 'role', 'country', 'city', 'postalCode'];
+        const allowedFields = ['firstName', 'lastName', 'phone', 'department', 'role', 'country', 'city', 'postalCode'];
         Object.keys(updateData).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete updateData[key];
@@ -251,8 +247,6 @@ async function update(req, res, next) {
         next(error);
     }
 }
-
-
 
 function _delete(req, res, next) {
     // users can delete their own account and admins can delete any account

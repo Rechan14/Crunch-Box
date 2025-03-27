@@ -16,6 +16,7 @@ function model(sequelize) {
         firstName: { type: DataTypes.STRING, allowNull: false },
         lastName: { type: DataTypes.STRING, allowNull: false },
         role: { type: DataTypes.STRING, allowNull: false },
+        department: { type: DataTypes.STRING, allowNull: false },
         country: { type: DataTypes.STRING, allowNull: false },
         city: { type: DataTypes.STRING, allowNull: false },
         postalCode: { type: DataTypes.STRING, allowNull: true },

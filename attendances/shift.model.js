@@ -1,19 +1,23 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('_helpers/db'); // assuming db.js is where your sequelize instance is set up
+// module.exports = (sequelize, DataTypes) => {
+//   const Shift = sequelize.define('Shift', {
+//     timeIn: {
+//       type: DataTypes.STRING,
+//       allowNull: false,
+//     },
+//     timeOut: {
+//       type: DataTypes.STRING,
+//       allowNull: false,
+//     },
+//     userId: {
+//       type: DataTypes.INTEGER,
+//       allowNull: false,
+//     },
+//   });
 
-const Shift = sequelize.define('Shift', {
-  timeIn: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  timeOut: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-});
+// Shift.associate = (models) => {
+//     Shift.belongsTo(models.Account, { foreignKey: 'userId' });
+//   };
 
-module.exports = Shift;
+//   return Shift;
+// };
+
