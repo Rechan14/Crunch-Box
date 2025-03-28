@@ -8,18 +8,28 @@ module.exports = (sequelize, DataTypes) => {
     date: { type: DataTypes.DATEONLY, allowNull: false },
     timeIn: { type: DataTypes.DATE, allowNull: false },
     timeOut: { type: DataTypes.DATE, allowNull: true },
-    totalHours: { 
+    totalHours: {
       type: DataTypes.FLOAT,
       allowNull: true,
-      get() { // Calculate total hours dynamically
-        if (this.getDataValue("timeOut")) {
-          const timeIn = new Date(this.getDataValue("timeIn"));
-          const timeOut = new Date(this.getDataValue("timeOut"));
-          return (timeOut - timeIn) / (1000 * 60 * 60); // Convert ms to hours
+      get() {
+        const timeIn = this.getDataValue("timeIn");
+        const timeOut = this.getDataValue("timeOut");
+    
+        // Ensure both timeIn and timeOut exist
+        if (timeIn && timeOut) {
+          const timeInDate = new Date(timeIn);
+          const timeOutDate = new Date(timeOut);
+    
+          // Check if the time difference is negative, then return 0 or a fallback value
+          const diffInMs = timeOutDate - timeInDate;
+          if (diffInMs < 0) return 0; // Fallback value for negative times
+    
+          // Return the time difference in hours
+          return diffInMs / (1000 * 60 * 60);
         }
-        return null;
-      }
-    }
+        return null; // Return null if timeOut doesn't exist
+      },
+    }    
   }, {
     tableName: "attendances",
     timestamps: true,
