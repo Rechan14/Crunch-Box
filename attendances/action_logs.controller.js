@@ -4,10 +4,10 @@ const db = require("_helpers/db");
 
 // Log shift change
 router.post("/", async (req, res) => {
-  const { shiftId, userId, timeIn, timeOut } = req.body;
+  const { userId, timeIn, timeOut } = req.body;
   try {
     const { ActionLog } = await db;
-    const log = await ActionLog.logShiftChange(shiftId, userId, timeIn, timeOut);
+    const log = await ActionLog.logShiftChange(userId, timeIn, timeOut);
     res.status(201).json({
       message: "Shift change logged successfully.",
       data: log,
@@ -32,16 +32,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Approve shift change
+// Approve shift change (now using Attendance instead of Shift)
 router.put("/:id/approve", async (req, res) => {
-  const { id } = req.params;
+  const { id: actionLogId } = req.params;
+  console.log("Approving Shift Change for ID:", actionLogId);
+
   try {
-    const { ActionLog } = await db;
-    const Shift = require("../attendances/shift.model"); // Load your Shift model here
-
-    await ActionLog.approveShiftChange(id, Shift); //  Use Shift model, not Timesheet
-
-    res.send("Shift change approved and shift updated.");
+    const { ActionLog, Attendance } = await db;
+    await ActionLog.approveShiftChange(actionLogId, Attendance);
+    res.send("Shift change approved and attendance updated.");
   } catch (error) {
     console.error("Approve Error:", error);
     res.status(500).send("Error approving shift change.");

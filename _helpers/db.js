@@ -32,11 +32,9 @@ async function initialize() {
         db.Upload = require("../upload/upload.model")(sequelize, DataTypes);
         db.Account = require("../accounts/account.model")(sequelize, DataTypes);
         db.RefreshToken = require("../accounts/refresh-token.model")(sequelize, DataTypes);
-        // db.Timesheet = require("../timesheets/timesheet.model")(sequelize, DataTypes);
         db.ProfileUpload = require("../upload/profile-uploads.model")(sequelize, DataTypes);
         db.Attendance = require("../attendances/attendance.model")(sequelize, DataTypes);
-        db.ActionLog = require("../attendances/action_log.model")(sequelize, DataTypes);
-        // db.Shift = require("../attendances/shift.model")(sequelize, DataTypes);
+        db.ActionLog = require("../attendances/action_log.model")(sequelize, DataTypes); 
 
         console.log("Loaded Models:", Object.keys(db));
 
