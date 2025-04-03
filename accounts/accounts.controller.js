@@ -84,6 +84,7 @@ function registerSchema(req, res, next) {
         lastName: Joi.string().required(),
         department: Joi.string().required(),
         email: Joi.string().email().required(),
+        employmentType: Joi.string().required(),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
         country: Joi.string().required(),
@@ -180,6 +181,7 @@ function createSchema(req, res, next) {
         lastName: Joi.string().required(),
         department: Joi.string().required(),
         email: Joi.string().email().required(),
+        employmentType: Joi.string().required(),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
@@ -211,6 +213,7 @@ function updateSchema(req, res, next) {
         lastName: Joi.string().allow(''),
         department: Joi.string().allow(''),
         email: Joi.string().email().allow(''),
+        employmentType: Joi.string().required(''),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).allow(''),
         confirmPassword: Joi.string().valid(Joi.ref('password')).allow(''),
@@ -229,7 +232,7 @@ async function update(req, res, next) {
         const updateData = req.body;
 
         // Ensure only allowed fields are updated
-        const allowedFields = ['firstName', 'lastName', 'phone', 'department', 'role', 'country', 'city', 'postalCode'];
+        const allowedFields = ['firstName', 'lastName', 'phone', 'department','employmenType', 'role', 'country', 'city', 'postalCode'];
         Object.keys(updateData).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete updateData[key];
