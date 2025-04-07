@@ -46,18 +46,20 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update Attendance and Log Changes
+// Update Attendance and Log Changes
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    console.log("Updating attendance ID:", id, "with data:", updates); // Debug log
+    console.log("Updating attendance ID:", id, "with data:", updates);
 
     const attendance = await Attendance.findByPk(id);
-if (!attendance) {
-    return res.status(404).json({ message: "Attendance record not found!" });
+    if (!attendance) {
+      return res.status(404).json({ message: "Attendance record not found!" });
     }
-    qconsole.log("Attendance record found:", attendance.toJSON());
+
+    console.log("Attendance record found:", attendance.toJSON());
 
     // Format time correctly
     const formattedUpdates = {
@@ -66,10 +68,23 @@ if (!attendance) {
       timeOut: updates.timeOut ? new Date(`${updates.timeOut}:00Z`) : null,
     };
 
+    // Temporarily merge updated values into the attendance object to simulate the result
+    const simulated = {
+      ...attendance.toJSON(),
+      ...formattedUpdates,
+    };
+
+    // ✅ Recalculate totalHours if timeIn and timeOut are present
+    if (simulated.timeIn && simulated.timeOut) {
+      const diffMs = new Date(simulated.timeOut).getTime() - new Date(simulated.timeIn).getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      formattedUpdates.totalHours = parseFloat(diffHours.toFixed(2));
+    }
+
     // Track changes in AttendanceLog
     const logEntries = [];
     for (const key of Object.keys(formattedUpdates)) {
-      if (formattedUpdates[key] !== attendance[key]) {
+      if (formattedUpdates[key]?.toString() !== attendance[key]?.toString()) {
         logEntries.push({
           attendanceId: attendance.id,
           userId: req.user.id, // Assuming user is authenticated
@@ -92,6 +107,5 @@ if (!attendance) {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 module.exports = router;
