@@ -7,16 +7,10 @@
         "database": "node-mysql-signup-verification-api"
     },
     "secret": "vonsleryl",
-    "emailFrom": "info@node-mysql-signup-verification-api.com",
+    "emailFrom": "Crunch Box OPC <vonsleryl.crunchbox@gmail.com>",
     "smtpOptions": {
-    "host": "smtp.ethereal.email",
-    "port": 587,
-    "secure": false,
-    "requireTLS": true,
-    "auth": {
-        "user": "${SMTP_USER}",
-        "pass": "${SMTP_PASS}"
+      "host": "smtp.gmail.com",
+      "port": 465,
+      "secure": true
     }
-}
-
-}
+  }
