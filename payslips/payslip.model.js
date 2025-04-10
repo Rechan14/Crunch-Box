@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         allowances: {
-            type: DataTypes.FLOAT,
+            type: DataTypes.FLOAT, 
             defaultValue: 0,
         },
         deductions: {
