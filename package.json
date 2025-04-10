@@ -31,7 +31,7 @@
         "nodemailer": "^6.4.11",
         "react-easy-crop": "^5.4.1",
         "rootpath": "^0.1.2",
-        "sequelize": "^6.37.6",
+        "sequelize": "^6.37.7",
         "swagger-ui-express": "^4.1.4",
         "yamljs": "^0.3.0"
     },

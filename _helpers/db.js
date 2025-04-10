@@ -35,6 +35,7 @@ async function initialize() {
         db.ProfileUpload = require("../upload/profile-uploads.model")(sequelize, DataTypes);
         db.Attendance = require("../attendances/attendance.model")(sequelize, DataTypes);
         db.ActionLog = require("../attendances/action_log.model")(sequelize, DataTypes); 
+        db.Payslip = require("../payslips/payslip.model")(sequelize, DataTypes);
 
         console.log("Loaded Models:", Object.keys(db));
 
