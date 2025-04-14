@@ -108,4 +108,42 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+// GET /api/attendances/absents?date=YYYY-MM-DD
+router.get("/absents/by-date", async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
+
+    // Get all users
+    const allUsers = await db.Account.findAll({
+      attributes: ["id", "firstName", "lastName"],
+    });
+
+    // Get all users who have attendance for the given date
+    const attendances = await db.Attendance.findAll({
+      where: { date },
+      attributes: ["userId"],
+    });
+
+    const presentUserIds = attendances.map((a) => a.userId);
+
+    // Filter users who are NOT present
+    const absentees = allUsers
+      .filter((user) => !presentUserIds.includes(user.id))
+      .map((user) => ({
+        fullName: `${user.firstName} ${user.lastName}`,
+        date,
+        remarks: "No log-in",
+      }));
+
+    res.json(absentees);
+  } catch (error) {
+    console.error("Error fetching absentees:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 module.exports = router;
