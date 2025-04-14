@@ -33,6 +33,7 @@ app.use("/attendances", require("./attendances/attendances.controller"));
 app.use("/action-logs", require("./attendances/action_logs.controller"));
 app.use("/payslips", require("./payslips/payslips.controller"));
 
+
 // Global Error Handler
 app.use(errorHandler);
 
