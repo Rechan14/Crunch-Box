@@ -11,7 +11,7 @@ function model(sequelize) {
             primaryKey: true     // Marks it as the primary key
         },
         title: { type: DataTypes.STRING, allowNull: false },
-        email: { type: DataTypes.STRING, allowNull: false },
+        email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: {isEmail: true} },
         passwordHash: { type: DataTypes.STRING, allowNull: false },
         firstName: { type: DataTypes.STRING, allowNull: false },
         lastName: { type: DataTypes.STRING, allowNull: false },
@@ -44,7 +44,7 @@ function model(sequelize) {
         scopes: {
             withHash: { attributes: {}, }
         }        
-    };
-
+    }; 
+ 
     return sequelize.define('account', attributes, options);
 }

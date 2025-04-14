@@ -102,10 +102,10 @@ async function register(params, origin) {
         // Validate if email is already registered
         const existingAccount = await db.Account.findOne({ where: { email: params.email } });
         if (existingAccount) {
-            console.log(" Email already registered:", params.email);
-            return await sendAlreadyRegisteredEmail(params.email, origin);
+            await sendAlreadyRegisteredEmail(params.email, origin); 
+            throw 'Email is already registered';
         }
-
+        
         // Create new account instance
         const account = new db.Account(params);
 
@@ -132,8 +132,8 @@ async function register(params, origin) {
         return { message: "Registration successful! Please check your email for verification." };
     } catch (error) {
         console.error(" Registration Error:", error); // Log full error details
-        throw new Error("Internal Server Error: " + error.message);
-    }
+        throw error;
+    }    
 }
 
 async function verifyEmail({ token }) {
@@ -195,22 +195,33 @@ async function getById(id) {
 }
 
 async function create(params) {
-    // validate
-    if (await db.Account.findOne({ where: { email: params.email } })) {
-        throw 'Email "' + params.email + '" is already registered';
+    // First, check if the email already exists
+    const existingAccount = await db.Account.findOne({ where: { email: params.email } });
+    if (existingAccount) {
+        // If email is already taken, throw an error
+        throw new Error('Email is already registered');
     }
 
+    // Create the new account object
     const account = new db.Account(params);
+    
+    // If the account is the first one, assign it as an Admin
+    const isFirstAccount = (await db.Account.count()) === 0;
+    account.role = isFirstAccount ? Role.Admin : Role.User;
+
+    // Set the verification timestamp
     account.verified = Date.now();
 
-    // hash password
+    // Hash the password
     account.passwordHash = await hash(params.password);
 
-    // save account
+    // Save the new account in the database
     await account.save();
 
+    // Return basic account details after successful creation
     return basicDetails(account);
 }
+
 
 async function update(id, params) {
     const user = await db.Account.findByPk(id);

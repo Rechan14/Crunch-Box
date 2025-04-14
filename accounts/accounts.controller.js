@@ -194,15 +194,25 @@ function createSchema(req, res, next) {
 }
 
 function create(req, res, next) {
-    console.log("Creating Account...");  
-    console.log("Authenticated User:", req.user);  
-    console.log("Received Data:", req.body);  
+    console.log("Creating Account...");
+    console.log("Authenticated User:", req.user);
+    console.log("Received Data:", req.body);
 
-    accountService.create(req.body, req.user)
-        .then(account => res.json(account))
+    accountService.create(req.body)
+        .then(account => res.json(account)) // If successful, send the account data
         .catch(error => {
-            console.error("Error creating account:", error);
-            res.status(500).json({ message: "Internal Server Error" });
+            console.error("Error creating account:", error); // Log the full error for debugging
+
+            // Check if the error is SequelizeUniqueConstraintError (for duplicate email)
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                const duplicateEmailError = error.errors.find(e => e.path === 'email'); // Check if 'email' is the issue
+                if (duplicateEmailError) {
+                    return res.status(400).json({ message: "Email is already registered" });
+                }
+            }
+
+            // For any other errors, return a generic message
+            res.status(500).json({ message: error.message || "Internal Server Error" });
         });
 }
 
