@@ -46,7 +46,6 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update Attendance and Log Changes
-// Update Attendance and Log Changes
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -144,6 +143,5 @@ router.get("/absents/by-date", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 module.exports = router;

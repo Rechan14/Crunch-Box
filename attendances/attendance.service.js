@@ -102,4 +102,4 @@ async function getAttendanceById(id) {
   return await db.Attendance.findByPk(id, {
     include: db.Upload,
   });
-}
+} 
