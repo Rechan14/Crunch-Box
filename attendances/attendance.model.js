@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
     date: { type: DataTypes.DATEONLY, allowNull: false },
     timeIn: { type: DataTypes.DATE, allowNull: false },
     timeOut: { type: DataTypes.DATE, allowNull: true },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     totalHours: {
       type: DataTypes.FLOAT,
       allowNull: true,
@@ -29,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
           return diffInMs / (1000 * 60 * 60);
         }
         return null; // Return null if timeOut doesn't exist
-      },
+      }, 
     }    
   }, {
     tableName: "attendances",
@@ -39,4 +43,4 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   return Attendance;
-};
+}; 

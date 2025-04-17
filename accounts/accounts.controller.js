@@ -5,6 +5,7 @@ const validateRequest = require('_middleware/validate-request');
 const authorize = require('_middleware/authorize')
 const Role = require('_helpers/role');
 const accountService = require('./account.service');
+// const { v4: uuidv4 } = require('uuid');
 
 // routes
 router.post('/authenticate', authenticateSchema, authenticate);
@@ -12,6 +13,7 @@ router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
 router.post('/register', registerSchema, register);
 router.post('/verify-email', verifyEmailSchema, verifyEmail);
+router.post('/resend-verification', resendVerificationSchema, resendVerification); //
 router.post('/forgot-password', forgotPasswordSchema, forgotPassword);
 router.post('/validate-reset-token', validateResetTokenSchema, validateResetToken);
 router.post('/reset-password', resetPasswordSchema, resetPassword);
@@ -109,11 +111,27 @@ function verifyEmailSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 
+// Schema for resending verification email (email)
+function resendVerificationSchema(req, res, next) {
+    const schema = Joi.object({
+      email: Joi.string().email().required(),
+    });
+    validateRequest(req, next, schema);
+  }
+
 function verifyEmail(req, res, next) {
     accountService.verifyEmail(req.body)
         .then(() => res.json({ message: 'Verification successful, you can now login' }))
         .catch(next);
 }
+
+// Controller for resending verification email (using email)
+function resendVerification(req, res, next) {
+    accountService
+      .resendVerification(req.body.email) // <-- match ni sa service
+      .then(() => res.json({ message: 'Verification email resent successfully.' }))
+      .catch(next);
+  }
 
 function forgotPasswordSchema(req, res, next) {
     const schema = Joi.object({
@@ -194,25 +212,15 @@ function createSchema(req, res, next) {
 }
 
 function create(req, res, next) {
-    console.log("Creating Account...");
-    console.log("Authenticated User:", req.user);
-    console.log("Received Data:", req.body);
+    console.log("Creating Account...");  
+    console.log("Authenticated User:", req.user);  
+    console.log("Received Data:", req.body);  
 
-    accountService.create(req.body)
-        .then(account => res.json(account)) // If successful, send the account data
+    accountService.create(req.body, req.user)
+        .then(account => res.json(account))
         .catch(error => {
-            console.error("Error creating account:", error); // Log the full error for debugging
-
-            // Check if the error is SequelizeUniqueConstraintError (for duplicate email)
-            if (error.name === 'SequelizeUniqueConstraintError') {
-                const duplicateEmailError = error.errors.find(e => e.path === 'email'); // Check if 'email' is the issue
-                if (duplicateEmailError) {
-                    return res.status(400).json({ message: "Email is already registered" });
-                }
-            }
-
-            // For any other errors, return a generic message
-            res.status(500).json({ message: error.message || "Internal Server Error" });
+            console.error("Error creating account:", error);
+            res.status(500).json({ message: "Internal Server Error" });
         });
 }
 
@@ -223,7 +231,6 @@ function updateSchema(req, res, next) {
         lastName: Joi.string().allow(''),
         department: Joi.string().allow(''),
         email: Joi.string().email().allow(''),
-        employmentType: Joi.string().required(''),
         phone: Joi.string().pattern(/^[0-9]{10,15}$/).allow(''),
         password: Joi.string().min(6).allow(''),
         confirmPassword: Joi.string().valid(Joi.ref('password')).allow(''),
@@ -242,7 +249,7 @@ async function update(req, res, next) {
         const updateData = req.body;
 
         // Ensure only allowed fields are updated
-        const allowedFields = ['firstName', 'lastName', 'phone', 'department','employmentType', 'role', 'country', 'city', 'postalCode'];
+        const allowedFields = ['firstName', 'lastName','password', 'confirmPassword', 'phone', 'department','employmentType', 'role', 'country', 'city', 'postalCode'];
         Object.keys(updateData).forEach(key => {
             if (!allowedFields.includes(key)) {
                 delete updateData[key];

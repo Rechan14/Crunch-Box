@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
     if (!req.body.userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
-
+  
     const attendance = await attendanceService.recordAttendance(req.body);
     res.status(201).json({ message: "Attendance recorded successfully", data: attendance });
 
@@ -60,31 +60,27 @@ router.put("/:id", async (req, res) => {
 
     console.log("Attendance record found:", attendance.toJSON());
 
-    // Format time correctly
     const formattedUpdates = {
       ...updates,
       timeIn: updates.timeIn ? new Date(`${updates.timeIn}:00Z`) : null,
       timeOut: updates.timeOut ? new Date(`${updates.timeOut}:00Z`) : null,
     };
 
-    // Temporarily merge updated values into the attendance object to simulate the result
     const simulated = {
       ...attendance.toJSON(),
       ...formattedUpdates,
     };
 
-    // ✅ Recalculate totalHours if timeIn and timeOut are present
     if (simulated.timeIn && simulated.timeOut) {
       const diffMs = new Date(simulated.timeOut).getTime() - new Date(simulated.timeIn).getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
       formattedUpdates.totalHours = parseFloat(diffHours.toFixed(2));
     }
 
-    // Track changes in AttendanceLog
     const logEntries = [];
     for (const key of Object.keys(formattedUpdates)) {
-      if (formattedUpdates[key]?.toString() !== attendance[key]?.toString()) {
-        logEntries.push({
+      if (formattedUpdates[key]?.toString() !== attendance[key]?.toString()) { 
+        logEntries.push({ 
           attendanceId: attendance.id,
           userId: req.user.id, // Assuming user is authenticated
           fieldChanged: key,
@@ -95,6 +91,8 @@ router.put("/:id", async (req, res) => {
     }
 
     await attendance.update(formattedUpdates);
+    // Reload the instance to get the latest data
+    await attendance.reload();
 
     if (logEntries.length > 0) {
       await AttendanceLog.bulkCreate(logEntries);
