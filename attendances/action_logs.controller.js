@@ -1,7 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const db = require("_helpers/db");
-// const { sequelize, ActionLog, Attendance } = require('_helpers/db');
+
+// Helper to safely parse date strings
+function parseTimeSafely(input) {
+  if (!input) return null;
+  const parsed = new Date(input);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
 
 // Log shift change with daily limit
 router.post("/", async (req, res) => {
@@ -10,16 +16,15 @@ router.post("/", async (req, res) => {
   try {
     const { ActionLog, Attendance } = await db;
 
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
     const MAX_REQUESTS_PER_DAY = parseInt(process.env.MAX_REQUESTS_PER_DAY) || 1;
 
-    // ✅ Check if user already submitted a log today
     const existingLogs = await ActionLog.count({
       where: {
         userId,
         date: today,
       },
-    });
+    }); 
 
     if (existingLogs >= MAX_REQUESTS_PER_DAY) {
       return res.status(400).json({
@@ -27,11 +32,39 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // ✅ Proceed to log shift change
+    // Step 1: Fetch the attendance record for today
+    const attendance = await Attendance.findOne({
+      where: {
+        userId,
+        date: today,
+      },
+    });
+
+    // If no attendance record, proceed to create a new ActionLog
+    if (!attendance) {
+      return res.status(404).json({ message: "No attendance record found for today." });
+    }
+
+    const incomingTimeIn = timeIn ? new Date(timeIn).toISOString() : null;
+    const incomingTimeOut = timeOut ? new Date(timeOut).toISOString() : null;
+
+    const currentTimeIn = attendance.timeIn ? new Date(attendance.timeIn).toISOString() : null;
+    const currentTimeOut = attendance.timeOut ? new Date(attendance.timeOut).toISOString() : null;
+
+    // Step 2: Check if there’s no change in timeIn/timeOut
+    const noChange = incomingTimeIn === currentTimeIn && incomingTimeOut === currentTimeOut;
+
+    if (noChange) {
+      return res.status(400).json({
+        message: "No changes detected. Your shift details are already up to date.",
+      });
+    }
+
+    // Step 3: Proceed to log shift change
     const log = await ActionLog.logShiftChange(userId, timeIn, timeOut, Attendance);
     res.status(201).json({
       message: "Shift change logged successfully.",
-      data: log,
+      data: log, 
     });
 
   } catch (error) {
@@ -39,6 +72,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ message: "Error logging shift change." });
   }
 });
+
 
 // View all action logs
 router.get("/", async (req, res) => {
@@ -54,7 +88,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Approve shift change (using attendanceId directly)
+// Approve shift change
 router.put("/:id/approve", async (req, res) => {
   const { id: actionLogId } = req.params;
   console.log("Approving Shift Change for ID:", actionLogId);
@@ -93,16 +127,22 @@ router.put("/:id/approve", async (req, res) => {
 
     // Update only the fields provided in the log details (timeIn, timeOut, etc.)
     attendance.timeIn = parsedDetails.timeIn ?? attendance.timeIn;
-    attendance.timeOut = parsedDetails.timeOut ?? attendance.timeOut;
+    attendance.timeOut = parsedDetails.timeOut ?? attendance.timeOut; 
 
-    // Optional: Recalculate totalHours (if you're not using the getter)
-    // You can also add logic here if needed
-    const timeInDate = new Date(attendance.timeIn);
-    const timeOutDate = new Date(attendance.timeOut);
+    // ✅ Recalculate totalHours
+    const timeInDate = parseTimeSafely(attendance.timeIn);
+    const timeOutDate = parseTimeSafely(attendance.timeOut);
 
-    if (!isNaN(timeInDate) && !isNaN(timeOutDate) && timeOutDate > timeInDate) {
+    if (timeInDate && timeOutDate && timeOutDate > timeInDate) {
       const diffInMs = timeOutDate - timeInDate;
-      attendance.totalHours = parseFloat((diffInMs / (1000 * 60 * 60)).toFixed(2));
+      const calculatedHours = parseFloat((diffInMs / (1000 * 60 * 60)).toFixed(2));
+      attendance.totalHours = calculatedHours;
+      console.log(`Recalculated totalHours: ${calculatedHours} (from ${timeInDate.toISOString()} to ${timeOutDate.toISOString()})`);
+    } else {
+      console.warn("⚠️ Skipping totalHours calculation. Invalid or incomplete timeIn/timeOut.", {
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+      });
     }
 
     await attendance.save({ transaction });
@@ -121,7 +161,7 @@ router.put("/:id/approve", async (req, res) => {
     res.status(500).send("Error approving shift change.");
   }
 });
-  
+
 // Reject shift change
 router.put("/:id/reject", async (req, res) => {
   const { id } = req.params;

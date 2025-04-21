@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     details: {
       type: DataTypes.TEXT, // JSON string format
     },
-    status: {
+    status: { 
       type: DataTypes.STRING,
       defaultValue: "pending",
     },
