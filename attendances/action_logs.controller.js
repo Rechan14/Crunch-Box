@@ -88,6 +88,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+
 // Approve shift change
 router.put("/:id/approve", async (req, res) => {
   const { id: actionLogId } = req.params;
