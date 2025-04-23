@@ -33,7 +33,7 @@ async function recordAttendance(data) {
         date: dateOnly,
         timeIn: timeObj,
         totalHours: 0.0,
-        status: "",
+        status: null
       });
     } else {
       // Update time-out and compute total hours

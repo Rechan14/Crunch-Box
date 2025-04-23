@@ -51,7 +51,7 @@ router.post("/", async (req, res) => {
     const currentTimeIn = attendance.timeIn ? new Date(attendance.timeIn).toISOString() : null;
     const currentTimeOut = attendance.timeOut ? new Date(attendance.timeOut).toISOString() : null;
 
-    // Step 2: Check if there’s no change in timeIn/timeOut
+    // Step 2: Check if there's no change in timeIn/timeOut
     const noChange = incomingTimeIn === currentTimeIn && incomingTimeOut === currentTimeOut;
 
     if (noChange) {
@@ -110,7 +110,6 @@ router.put("/:id/approve", async (req, res) => {
   console.log("Approving Shift Change for ID:", actionLogId);
 
   const { ActionLog, Attendance, sequelize } = await db;
-
   const transaction = await sequelize.transaction();
 
   try {
@@ -137,19 +136,56 @@ router.put("/:id/approve", async (req, res) => {
       actionLog.attendanceId = attendance.id;
     }
 
+    // Format and validate times
+    const formatTime = (timeStr) => {
+      if (!timeStr) return null;
+      const time = new Date(timeStr);
+      if (isNaN(time.getTime())) return null;
+      return time;
+    };
+
+    const timeInDate = formatTime(timeIn);
+    const timeOutDate = formatTime(timeOut);
+
     // Apply time changes
-    attendance.timeIn = timeIn ?? attendance.timeIn;
-    attendance.timeOut = timeOut ?? attendance.timeOut;
+    if (timeInDate) {
+      attendance.timeIn = timeInDate;
+    }
+    if (timeOutDate) {
+      attendance.timeOut = timeOutDate;
+    }
 
-    // ⏱️ Recalculate totalHours
-    const timeInDate = parseTimeSafely(attendance.timeIn);
-    const timeOutDate = parseTimeSafely(attendance.timeOut);
+    // ⏱️ Recalculate totalHours with proper AM/PM handling
+    if (timeInDate && timeOutDate) {
+      // Get hours for both times
+      const timeInHours = timeInDate.getHours();
+      const timeOutHours = timeOutDate.getHours();
+      
+      let totalHours;
+      
+      // If timeOut is earlier than timeIn, it means it's the next day
+      if (timeOutHours < timeInHours) {
+        // Calculate hours until midnight
+        const hoursUntilMidnight = 24 - timeInHours;
+        // Add hours from midnight to timeOut
+        totalHours = hoursUntilMidnight + timeOutHours;
+      } else {
+        // Regular same-day calculation
+        totalHours = timeOutHours - timeInHours;
+      }
 
-    if (timeInDate && timeOutDate && timeOutDate > timeInDate) {
-      const diffInMs = timeOutDate - timeInDate;
-      attendance.totalHours = parseFloat((diffInMs / (1000 * 60 * 60)).toFixed(2));
+      // Set the total hours
+      attendance.totalHours = parseFloat(totalHours.toFixed(2));
+      
+      console.log('Time Calculation Details:', {
+        timeIn: timeInDate.toISOString(),
+        timeOut: timeOutDate.toISOString(),
+        timeInHours,
+        timeOutHours,
+        totalHours: attendance.totalHours
+      });
     } else {
-      console.warn("⚠️ Skipping totalHours calculation due to incomplete/invalid time");
+      attendance.totalHours = 0.0;
     }
 
     // Save attendance and approve log
@@ -158,12 +194,21 @@ router.put("/:id/approve", async (req, res) => {
     await actionLog.save({ transaction });
 
     await transaction.commit();
-    res.send("Shift change approved and attendance updated.");
+    res.json({
+      message: "Shift change approved and attendance updated successfully.",
+      data: {
+        attendance,
+        actionLog
+      }
+    });
 
   } catch (error) {
     console.error("Approve Error:", error);
     await transaction.rollback();
-    res.status(500).send("Error approving shift change.");
+    res.status(500).json({ 
+      message: "Error approving shift change",
+      error: error.message
+    });
   }
 });
 
