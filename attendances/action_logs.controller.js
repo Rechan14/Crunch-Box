@@ -88,7 +88,22 @@ router.get("/", async (req, res) => {
   }
 });
 
-
+// Get action logs for a specific user
+router.get("/user/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const { ActionLog } = await db;
+    const logs = await ActionLog.findAll({
+      where: { userId },
+      order: [["createdAt", "DESC"]],
+    });
+    res.json(logs);
+  } catch (error) {
+    console.error("Error fetching user logs:", error);
+    res.status(500).send("Server error");
+  }
+});
+ 
 // Approve shift change
 router.put("/:id/approve", async (req, res) => {
   const { id: actionLogId } = req.params;
@@ -96,66 +111,55 @@ router.put("/:id/approve", async (req, res) => {
 
   const { ActionLog, Attendance, sequelize } = await db;
 
-  if (!sequelize) {
-    console.error("Sequelize instance not found.");
-    return res.status(500).send("Internal Server Error: Sequelize instance missing.");
-  }
-
   const transaction = await sequelize.transaction();
 
   try {
     const actionLog = await ActionLog.findByPk(actionLogId, { transaction });
-
-    if (!actionLog) {
-      console.error("Action log not found for ID:", actionLogId);
-      return res.status(404).send("Action log not found");
-    }
-
-    // ✅ Make sure actionLog has a valid attendanceId
-    if (!actionLog.attendanceId) {
-      throw new Error("Missing attendanceId in action log.");
-    }
-
-    const attendance = await Attendance.findByPk(actionLog.attendanceId, { transaction });
-
-    if (!attendance) {
-      console.error("Attendance not found for ID:", actionLog.attendanceId);
-      throw new Error("Attendance record not found.");
-    }
+    if (!actionLog) return res.status(404).send("Action log not found");
 
     const parsedDetails = JSON.parse(actionLog.details);
-    console.log("Parsed Details:", parsedDetails);
+    const { timeIn, timeOut, date, userId } = parsedDetails;
 
-    // Update only the fields provided in the log details (timeIn, timeOut, etc.)
-    attendance.timeIn = parsedDetails.timeIn ?? attendance.timeIn;
-    attendance.timeOut = parsedDetails.timeOut ?? attendance.timeOut; 
+    let attendance;
 
-    // ✅ Recalculate totalHours
+    if (actionLog.attendanceId) {
+      // ✅ EDIT LOG (Attendance exists)
+      attendance = await Attendance.findByPk(actionLog.attendanceId, { transaction });
+      if (!attendance) throw new Error("Attendance record not found.");
+    } else {
+      // ➕ ADD LOG (No attendance yet)
+      attendance = await Attendance.create({
+        userId: actionLog.userId,
+        date: date || new Date().toISOString().split("T")[0],
+      }, { transaction });
+
+      // Update log with new attendanceId
+      actionLog.attendanceId = attendance.id;
+    }
+
+    // Apply time changes
+    attendance.timeIn = timeIn ?? attendance.timeIn;
+    attendance.timeOut = timeOut ?? attendance.timeOut;
+
+    // ⏱️ Recalculate totalHours
     const timeInDate = parseTimeSafely(attendance.timeIn);
     const timeOutDate = parseTimeSafely(attendance.timeOut);
 
     if (timeInDate && timeOutDate && timeOutDate > timeInDate) {
       const diffInMs = timeOutDate - timeInDate;
-      const calculatedHours = parseFloat((diffInMs / (1000 * 60 * 60)).toFixed(2));
-      attendance.totalHours = calculatedHours;
-      console.log(`Recalculated totalHours: ${calculatedHours} (from ${timeInDate.toISOString()} to ${timeOutDate.toISOString()})`);
+      attendance.totalHours = parseFloat((diffInMs / (1000 * 60 * 60)).toFixed(2));
     } else {
-      console.warn("⚠️ Skipping totalHours calculation. Invalid or incomplete timeIn/timeOut.", {
-        timeIn: attendance.timeIn,
-        timeOut: attendance.timeOut,
-      });
+      console.warn("⚠️ Skipping totalHours calculation due to incomplete/invalid time");
     }
 
+    // Save attendance and approve log
     await attendance.save({ transaction });
-
-    // Mark actionLog as approved
     actionLog.status = "approved";
     await actionLog.save({ transaction });
 
     await transaction.commit();
-    console.log("✅ Shift change approved and attendance updated.");
-
     res.send("Shift change approved and attendance updated.");
+
   } catch (error) {
     console.error("Approve Error:", error);
     await transaction.rollback();
