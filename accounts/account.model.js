@@ -35,7 +35,7 @@ function model(sequelize) {
             get() { return !!(this.verified || this.passwordReset); }
         }
     };
-
+ 
     const options = {
         timestamps: false, 
         defaultScope: {

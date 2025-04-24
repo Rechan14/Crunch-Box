@@ -23,7 +23,8 @@ module.exports = {
     getById,
     create,
     update,
-    delete: _delete
+    delete: _delete,
+    deactivate
 };
 
 async function getAllWithPagination(page, limit) {
@@ -254,6 +255,13 @@ async function update(id, params) {
 async function _delete(id) {
     const account = await getAccount(id);
     await account.destroy();
+}
+
+async function deactivate(id) {
+    const account = await getAccount(id);
+    account.isActive = false;
+    await account.save();
+    return basicDetails(account);
 }
 
 // helper functions
