@@ -25,16 +25,18 @@ module.exports = (sequelize, DataTypes) => {
           const timeInDate = new Date(timeIn);
           const timeOutDate = new Date(timeOut);
     
-          // Check if the time difference is negative, then return 0 or a fallback value
-          const diffInMs = timeOutDate - timeInDate;
-          if (diffInMs < 0) return 0; // Fallback value for negative times
+          // If timeOut is before timeIn, it means it's the next day
+          if (timeOutDate < timeInDate) {
+            // Add 24 hours to timeOut
+            timeOutDate.setDate(timeOutDate.getDate() + 1);
+          }
     
-          // Return the time difference in hours
+          const diffInMs = timeOutDate.getTime() - timeInDate.getTime();
           return diffInMs / (1000 * 60 * 60);
         }
         return null; // Return null if timeOut doesn't exist
       }, 
-    }    
+    }     
   }, {
     tableName: "attendances",
     timestamps: true,

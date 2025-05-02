@@ -1,7 +1,6 @@
 const db = require('_helpers/db');
 const Calendar = db.Calendar;
 
-
 async function getAllEvents() {
   try {
     await db.ready;
@@ -21,8 +20,21 @@ async function getEventById(id) {
 async function createEvent(eventData) {
   try {
     await db.ready;
+    
+    // Process reminder data
+    if (eventData.reminder) {
+      const { enabled, minutesBefore } = eventData.reminder;
+      const startDate = new Date(eventData.startDate);
+      
+      eventData.reminderEnabled = enabled;
+      eventData.reminderMinutes = minutesBefore;
+      eventData.reminderNotificationTime = new Date(startDate.getTime() - minutesBefore * 60000);
+      
+      delete eventData.reminder; // Remove the original reminder object
+    }
+
     console.log("Event Data being inserted:", eventData);
-    const newEvent = await db.Calendar.create(eventData); // direct access
+    const newEvent = await db.Calendar.create(eventData);
     return newEvent;
   } catch (error) {
     console.error("Error creating event:", error);
@@ -42,6 +54,18 @@ async function updateEvent(id, eventData) {
       throw new Error("Event not found");
     }
 
+    // Process reminder data
+    if (eventData.reminder) {
+      const { enabled, minutesBefore } = eventData.reminder;
+      const startDate = new Date(eventData.startDate || event.startDate);
+      
+      eventData.reminderEnabled = enabled;
+      eventData.reminderMinutes = minutesBefore;
+      eventData.reminderNotificationTime = new Date(startDate.getTime() - minutesBefore * 60000);
+      
+      delete eventData.reminder; // Remove the original reminder object
+    }
+
     const updatedEvent = await event.update(eventData);
     return updatedEvent;
   } catch (error) {
@@ -57,10 +81,32 @@ async function deleteEvent(id) {
   return await event.destroy();
 }
 
+async function checkUpcomingReminders() {
+  try {
+    const now = new Date();
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60000); // Check next 5 minutes
+
+    const upcomingReminders = await Calendar.findAll({
+      where: {
+        reminderEnabled: true,
+        reminderNotificationTime: {
+          [db.Sequelize.Op.between]: [now, fiveMinutesFromNow]
+        }
+      }
+    });
+
+    return upcomingReminders;
+  } catch (error) {
+    console.error("Error checking reminders:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
   deleteEvent,
+  checkUpcomingReminders
 }; 

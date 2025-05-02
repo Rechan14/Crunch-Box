@@ -18,6 +18,7 @@ function model(sequelize) {
         role: { type: DataTypes.STRING, allowNull: false },
         employmentType: { type: DataTypes.STRING, allowNull: false },
         department: { type: DataTypes.STRING, allowNull: false },
+        position: { type: DataTypes.STRING, allowNull: true },
         country: { type: DataTypes.STRING, allowNull: false },
         city: { type: DataTypes.STRING, allowNull: false },
         postalCode: { type: DataTypes.STRING, allowNull: true },
@@ -47,4 +48,4 @@ function model(sequelize) {
     }; 
  
     return sequelize.define('account', attributes, options);
-}
+} 

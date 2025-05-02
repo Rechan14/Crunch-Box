@@ -193,6 +193,10 @@ router.put("/:id/approve", async (req, res) => {
     actionLog.status = "approved";
     await actionLog.save({ transaction });
 
+    // Update attendance status to approved
+    attendance.status = "approved";
+    await attendance.save({ transaction });
+
     await transaction.commit();
     res.json({
       message: "Shift change approved and attendance updated successfully.",
@@ -215,21 +219,30 @@ router.put("/:id/approve", async (req, res) => {
 // Reject shift change
 router.put("/:id/reject", async (req, res) => {
   const { id } = req.params;
-  try {
-    const { ActionLog } = await db;
+  const { ActionLog, Attendance, sequelize } = await db;
+  const transaction = await sequelize.transaction();
 
+  try {
     // Find the action log to reject
-    const actionLog = await ActionLog.findByPk(id);
+    const actionLog = await ActionLog.findByPk(id, { transaction });
     if (!actionLog) return res.status(404).send("Action log not found");
 
-    actionLog.status = "rejected";
-    await actionLog.save();
+    // Find the associated attendance record
+    const attendance = await Attendance.findByPk(actionLog.attendanceId, { transaction });
+    if (attendance) {
+      attendance.status = "rejected";
+      await attendance.save({ transaction });
+    }
 
+    actionLog.status = "rejected";
+    await actionLog.save({ transaction });
+
+    await transaction.commit();
     res.send("Shift change rejected.");
   } catch (error) {
     console.error("Reject Error:", error);
+    await transaction.rollback();
     res.status(500).send("Error rejecting shift change.");
   }
 });
-
 module.exports = router;

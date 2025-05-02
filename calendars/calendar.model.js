@@ -39,6 +39,33 @@ module.exports = (sequelize, DataTypes) => {
         },
       }
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    reminderEnabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    reminderMinutes: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: {
+          args: [1],
+          msg: "Reminder minutes must be at least 1"
+        }
+      }
+    },
+    reminderNotificationTime: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -49,8 +76,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
   }, {
-    timestamps: true, // Enable createdAt and updatedAt
+    timestamps: true,
   });
 
   return Calendar;
-};
+}; 

@@ -97,4 +97,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Get Pending Leaves
+router.get('/pending', async (req, res) => {
+  try {
+    const pendingLeaves = await req.Leave.findAll({ 
+      where: { 
+        status: 'pending' 
+      } 
+    });
+    res.status(200).json(pendingLeaves);
+  } catch (error) {
+    console.error('Error fetching pending leaves:', error);
+    res.status(500).json({ message: 'Failed to fetch pending leaves', error });
+  }
+});
+
 module.exports = router;
